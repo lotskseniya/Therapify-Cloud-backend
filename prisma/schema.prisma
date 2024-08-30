@@ -1,0 +1,137 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String                @id @default(cuid())
+  createdAt            DateTime              @default(now()) @map("created_at")
+  updatedAt            DateTime              @updatedAt @map("updated_at")
+  email                String                @unique
+  name                 String?
+  password             String
+  clients              Client[]
+  consultationSessions ConsultationSession[]
+  sessionDurations     SessionDuration[]
+  timeBlocks           TimeBlock[]
+}
+
+model Client {
+  id                        String                     @id @default(cuid()) @unique
+  createdAt                 DateTime                   @default(now()) @map("created_at")
+  updatedAt                 DateTime                   @updatedAt @map("updated_at")
+  name                      String
+  contact                   String?
+  priority                  Priority?
+  isCompleted               Boolean?                   @default(false) @map("is_completed")
+  userId                    String                     @map("user_id")
+  user                      User                       @relation(fields: [userId], references: [id])
+  ClientProgressAnxietys    ClientProgressAnxiety[]
+  ClientProgressDepressions ClientProgressDepression[]
+}
+
+model TimeBlock {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  name      String
+  color     String?
+  duration  Int
+  order     Int      @default(1)
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model ConsultationSession {
+  id             String          @id @default(cuid())
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+  isCompleted    Boolean?        @default(false) @map("is_completed")
+  userId         String          @map("user_id")
+  user           User            @relation(fields: [userId], references: [id])
+  sessionsRounds SessionsRound[]
+}
+
+model SessionsRound {
+  id                    String              @id @default(cuid())
+  createdAt             DateTime            @default(now()) @map("created_at")
+  updatedAt             DateTime            @updatedAt @map("updated_at")
+  totalDuration         Int                 @map("total_duration")
+  isCompleted           Boolean?            @default(false) @map("is_completed")
+  consultationSessionId String              @map("consultation_session_id")
+  consultationSession   ConsultationSession @relation(fields: [consultationSessionId], references: [id], onDelete: Cascade)
+}
+
+model SessionDuration {
+  id                String   @id @default(cuid())
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  sessionDuration   Int?     @default(50) @map("session_duration")
+  breakDuration     Int?     @default(10) @map("break_duration")
+  longBreakDuration Int?     @default(30) @map("long_break_duration")
+  sessionsCount     Int?     @default(7) @map("sessions_count")
+  userId            String   @map("user_id")
+  user              User     @relation(fields: [userId], references: [id])
+}
+
+model ClientProgressAnxiety {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  suddendlyscared Int? @default(0) @map("suddendly_scared")
+  fearful         Int? @default(0)
+  faintness       Int? @default(0)
+  nervousness     Int? @default(0)
+  heartRacing     Int? @default(0) @map("heart_racing")
+  trembling       Int? @default(0)
+  feelingTense    Int? @default(0) @map("feeling_tense")
+  headaches       Int? @default(0)
+  panic           Int? @default(0)
+  restlessness    Int? @default(0)
+
+  clientId String @map("client_id")
+  client   Client @relation(fields: [clientId], references: [id])
+}
+
+model ClientProgressDepression {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  lowEnergy            Int? @default(0) @map("low_energy")
+  blamingyourself      Int? @default(0) @map("blaming_yourself")
+  crying               Int? @default(0)
+  sexualLoss           Int? @default(0) @map("sexual_loss")
+  poorAppetite         Int? @default(0) @map("poor_appetite")
+  insomnia             Int? @default(0)
+  hopeness             Int? @default(0)
+  feelingBlue          Int? @default(0) @map("feeling_blue")
+  feelingLonely        Int? @default(0) @map("feeling_lonely")
+  endingLifeThoughts   Int? @default(0) @map("ending_life_thoughts")
+  tpappedFeelings      Int? @default(0) @map("trapped_feelings")
+  wooringTooMuch       Int? @default(0) @map("wooring_too_much")
+  feelingNoInterest    Int? @default(0) @map("feeling_no_interest")
+  feelingEffortless    Int? @default(0) @map("feeling_effortless")
+  feelingWorthlessness Int? @default(0) @map("feeling_worthlessness")
+
+  clientId String @map("client_id")
+  client   Client @relation(fields: [clientId], references: [id])
+}
+
+model TelegramBotSession {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value String
+}
+
+enum Priority {
+  low
+  medium
+  high
+}
